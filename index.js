@@ -40,7 +40,7 @@ const validate = async ({ rule, body, exclude_body = false }) => {
         if (third_rule[0] === "exist" && !third_rule[1]) throw new Error(`exist rule required model name`)
         if (third_rule[0] === "exist") {
             const exist = await _mongoose.model(third_rule[1]).findOne({ [`${rule_key}`]: body[rule_key], deleted_at: null })
-            if (exist) throw new Error(`400-${third_rule[1].toUpperCase()}4000}`)
+            if (exist) throw new Error(`400-${third_rule[1].toUpperCase()}4000`)
         }
 
         _body[rule_key] = body[rule_key]
