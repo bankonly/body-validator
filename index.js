@@ -8,7 +8,7 @@ const validate = async ({ rule, body, exclude_body = false }) => {
     const rules_key = Object.keys(rule)
     for (let i = 0; i < rules_key.length; i++) {
         const rule_key = rules_key[i];
-        const rule_data = rules[rule_key]
+        const rule_data = rule[rule_key]
 
         const split_rule_msg = rule_data.split("|")
         if (split_rule_msg.length < 2) throw new Error("Invalid rule expect xx|xx")
