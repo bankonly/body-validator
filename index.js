@@ -11,10 +11,6 @@ const validate = async ({ rule, body, exclude_body = false }) => {
         let rule_key = rules_key[i];
 
         const split_rule_key = rule_key.split(":");
-        if (split_rule_key.length > 1) {
-            rule_key = split_rule_key[0];
-        }
-
         const rule_data = rule[rule_key];
 
         const split_rule_msg = rule_data.split("|");
