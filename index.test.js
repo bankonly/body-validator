@@ -1,21 +1,14 @@
 const validate = require("./index");
 
 const rule = {
-  name: "required|ERR4001|file",
+  name: "required|ERR4001|exist.branch_id@_id:branch",
+  "branch_id@_id": "required|ERR4002|exist:branch",
 };
 
 const buff = Buffer.from('abc');
-console.log(buff)
 const body = {
-  name: {
-    name: "bank",
-    total: 100,
-    hello: "123",
-    list: "61c3fc57c312253a7e1da187",
-  },
-  data: {
-    name: "registers",
-  },
+  name: "HELLO",
+  branch_sid: "sd"
 };
 
 setTimeout(async () => {

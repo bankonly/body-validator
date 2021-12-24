@@ -1,4 +1,4 @@
-const _mongoose = require("mongoose");
+// const _mongoose = require("mongoose");
 
 const first_rule_allow = ["required", "optional", "objectid"];
 const thrid_rule_allow = ["exist", "notexist", "enum", "array", "string", "number", "boolean", "object", "objectid", "file", "files"];
@@ -15,7 +15,7 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
         let rule_key = rules_key[i];
         const rule_data = rule[rule_key];
         let body_data = body[rule_key]
-        const split_rule_key = rule_key.split(":");
+        const split_rule_key = rule_key.split("@");
 
         if (split_rule_key.length > 0) {
             body_data = body[split_rule_key[0]]
@@ -32,9 +32,16 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
         const first_rule = split_rule_msg[0];
         const second_rule = split_rule_msg[1];
         let third_rule = "";
+        let split_third_rule = "";
+        let key_update_check = "";
 
         if (split_rule_msg.length === 3) {
             third_rule = split_rule_msg[2].split(":");
+            split_third_rule = third_rule[0].split(".")
+            if (split_third_rule.length > 1) {
+                third_rule[0] = split_third_rule[0]
+                key_update_check = split_third_rule[1]
+            }
             if (!thrid_rule_allow.includes(third_rule[0])) {
                 throw new Error(`Invalid thrid rule ${thrid_rule_allow}`);
             }
@@ -54,8 +61,21 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
 
         if (third_rule[0] === "exist" && !third_rule[1]) throw new Error(`exist rule required model name`);
         if (third_rule[0] === "exist" || third_rule[0] === "notexist") {
+            console.log(key_update_check)
+            let key_body_update_check = key_update_check
+            const split_key_update_check = key_update_check.split("@")
+            if (split_key_update_check.length > 1) key_body_update_check = split_key_update_check[0]
+
             const exist = await _mongoose.model(third_rule[1]).findOne({ [`${target_key}`]: body_data });
-            if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist)) throw new Error(`400-${second_rule}`);
+
+            if (key_update_check && third_rule[0] === "exist") {
+                if (!rule[key_update_check]) throw new Error("rule missing")
+                if (body[key_body_update_check] === null || body[key_body_update_check] === undefined || body[key_body_update_check] === "") throw new Error(`400::${rule[key_update_check].split("|")[1]}`)
+                if (!exist) throw new Error(`400-${second_rule}204`);
+                if (exist._id.toString() !== body[key_body_update_check]) throw new Error(`400-${second_rule}NOTMATCH`);
+            } else {
+                if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist)) throw new Error(`400-${second_rule}`);
+            }
         }
 
         if (third_rule[0] === "file") {
