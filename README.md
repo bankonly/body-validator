@@ -1,6 +1,6 @@
 ```js
 // Basic rule
-const rule = {
+const request_body = {
   name: "Souksavanh",
   age: 23,
   some_id: "61c3fc57c312253a7e1da187",
@@ -23,7 +23,7 @@ const rule = {
     Third: value type or validation [string,object,number,object,array,enum,exist]
 
 */
-const request_body = {
+const rule = {
   name: "required|name must be string|string",
   age: "required|name must be number|number",
   some_id: "required|name must be ojectid|ojectid",
