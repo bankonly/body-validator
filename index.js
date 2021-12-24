@@ -48,7 +48,7 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
             }
         }
 
-        if (first_rule !== "optional" || body_data || (first_rule !== "optional" && (req.files || req.file))) {
+        if (first_rule !== "optional" || body_data || (first_rule !== "optional" && req.file)) {
 
 
             if (!first_rule_allow.includes(first_rule)) {
