@@ -9,8 +9,8 @@ const validate = async ({ rule, body, exclude_body = false }) => {
     if (rules_key.length === 0) throw new Error(`No rule given`)
     for (let i = 0; i < rules_key.length; i++) {
         let rule_key = rules_key[i];
-        
-        
+
+
         const split_rule_key = rule_key.split(":")
         if (split_rule_key.length > 1) {
             rule_key = split_rule_key[0]
@@ -59,7 +59,9 @@ const validate = async ({ rule, body, exclude_body = false }) => {
         _body[rule_key] = body[rule_key]
     }
 
-    if (!exclude_body) return body
+    if (!exclude_body) {
+        return body
+    }
     return _body
 
 }
