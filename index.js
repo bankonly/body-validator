@@ -1,4 +1,4 @@
-// const _mongoose = require("mongoose");
+const _mongoose = require("mongoose");
 
 const first_rule_allow = ["required", "optional", "objectid"];
 const thrid_rule_allow = ["exist", "notexist", "enum", "array", "string", "number", "boolean", "object", "objectid", "file", "files"];
