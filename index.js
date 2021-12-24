@@ -1,11 +1,15 @@
-const _mongoose = require("mongoose");
+// const _mongoose = require("mongoose");
 
 const first_rule_allow = ["required", "optional", "objectid"];
-const thrid_rule_allow = ["exist", "notexist", "enum", "array", "string", "number", "boolean", "object", "objectid"];
-
-const validate = async ({ rule, body, exclude_body = false }) => {
+const thrid_rule_allow = ["exist", "notexist", "enum", "array", "string", "number", "boolean", "object", "objectid", "file", "files"];
+const TYPE_ALLOW = ["body", "query"]
+const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
     let _body = {};
+
+    if (!TYPE_ALLOW.includes(type)) throw new Error("invalid type rule")
+    let body = req[type]
     const rules_key = Object.keys(rule);
+
     if (rules_key.length === 0) throw new Error(`No rule given`);
     for (let i = 0; i < rules_key.length; i++) {
         let rule_key = rules_key[i];
@@ -52,6 +56,14 @@ const validate = async ({ rule, body, exclude_body = false }) => {
         if (third_rule[0] === "exist" || third_rule[0] === "notexist") {
             const exist = await _mongoose.model(third_rule[1]).findOne({ [`${target_key}`]: body_data });
             if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist)) throw new Error(`400-${second_rule}`);
+        }
+
+        if (third_rule[0] === "file") {
+            if (!req.file || !req.file[rule_key]) throw new Error(`400-${second_rule}`);
+        }
+
+        if (third_rule[0] === "files") {
+            if (!req.files || !Array.isArray(req.files)) throw new Error(`400-${second_rule}`);
         }
 
         if (third_rule[0] === "enum") {

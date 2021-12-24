@@ -1,9 +1,11 @@
 const validate = require("./index");
 
 const rule = {
-  name: "required|ERR4001|object:name/required-string,total/number,hello/string,list/objectid",
+  name: "required|ERR4001|file",
 };
 
+const buff = Buffer.from('abc');
+console.log(buff)
 const body = {
   name: {
     name: "bank",
@@ -18,7 +20,7 @@ const body = {
 
 setTimeout(async () => {
   try {
-    await validate({ rule, body, exclude_body: true });
+    await validate({ rule, req: { body }, exclude_body: true });
   } catch (error) {
     console.log(error);
   }

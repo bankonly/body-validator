@@ -35,7 +35,7 @@ const rule = {
   array_data: "required|name must be array|array",
 };
 
-const exclude_body = await validate({ rule, body: request_body, exclude_body: true });
+const exclude_body = await validate({ rule, req: req, exclude_body: true,type:"body" }); //or type = [body,query]
 /*
  const rule = {
     name: "Souksavanh",
