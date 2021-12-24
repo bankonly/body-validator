@@ -94,7 +94,7 @@ const async_middleware = (handler) => {
 
 const simple_test = async_middleware(async (req,res)=> {
     const resp = new Res(res)
-    const no_exclude_body = await validate({ rule, body: request_body });
+    const no_exclude_body = await validate({ rule, req, });
   return resp.response({data:"some_data"});
 })
 
