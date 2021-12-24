@@ -70,8 +70,7 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
             if (key_update_check && third_rule[0] === "exist") {
                 if (!rule[key_update_check]) throw new Error("rule missing")
                 if (body[key_body_update_check] === null || body[key_body_update_check] === undefined || body[key_body_update_check] === "") throw new Error(`400-${rule[key_update_check].split("|")[1]}`)
-                if (!exist) throw new Error(`400-${second_rule}204`);
-                if (exist._id.toString() !== body[key_body_update_check]) throw new Error(`400-${second_rule}EXISTED`);
+                if (exist && exist._id.toString() !== body[key_body_update_check]) throw new Error(`400-${second_rule}EXISTED`);
             } else {
                 if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist)) throw new Error(`400-${second_rule}`);
             }
