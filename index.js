@@ -81,11 +81,11 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
             }
 
             if (third_rule[0] === "file") {
-                if (!req.files || !req.file[rule_key] || Array.isArray(req.files[rule_key])) throw new Error(`400-${second_rule}`);
+                if (!req.files || !req.files[rule_key] || Array.isArray(req.files[rule_key])) throw new Error(`400-${second_rule}`);
             }
 
             if (third_rule[0] === "files") {
-                if (!req.files || !req.file[rule_key] || !Array.isArray(req.files[rule_key])) throw new Error(`400-${second_rule}`);
+                if (!req.files || !req.files[rule_key] || !Array.isArray(req.files[rule_key])) throw new Error(`400-${second_rule}`);
             }
 
             if (third_rule[0] === "enum") {
