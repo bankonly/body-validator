@@ -50,7 +50,7 @@ const validate = async ({ rule, body, exclude_body = false }) => {
                 target_key = split_rule_key[1];
             }
             const exist = await _mongoose.model(third_rule[1]).findOne({ [`${target_key}`]: body[rule_key], deleted_at: null });
-            if ((third_rule[0] === "exist" && exist) || third_rule[0] === "notexist" && !exist) throw new Error(`400-${third_rule[1].toUpperCase()}204}`);
+            if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist)) throw new Error(`400-${third_rule[1].toUpperCase()}204`);
         }
 
         if (third_rule[0] === "enum") {
