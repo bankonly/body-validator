@@ -1,7 +1,7 @@
 const validate = require("./index");
 
 const rule = {
-  name: "required|ERR4001|object:name/required-string,total/number,hello/string,list/objectid",
+  name: "required|ERR4001|object",
 };
 
 const body = {
