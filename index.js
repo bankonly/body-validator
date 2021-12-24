@@ -61,7 +61,6 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
 
         if (third_rule[0] === "exist" && !third_rule[1]) throw new Error(`exist rule required model name`);
         if (third_rule[0] === "exist" || third_rule[0] === "notexist") {
-            console.log(key_update_check)
             let key_body_update_check = key_update_check
             const split_key_update_check = key_update_check.split("@")
             if (split_key_update_check.length > 1) key_body_update_check = split_key_update_check[0]
