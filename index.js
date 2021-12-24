@@ -9,9 +9,18 @@ const validate = async ({ rule, body, exclude_body = false }) => {
     if (rules_key.length === 0) throw new Error(`No rule given`);
     for (let i = 0; i < rules_key.length; i++) {
         let rule_key = rules_key[i];
-
-        const split_rule_key = rule_key.split(":");
         const rule_data = rule[rule_key];
+        let body_data = body[rule_key]
+        const split_rule_key = rule_key.split(":");
+
+        if (split_rule_key.length > 0) {
+            body_data = body[split_rule_key[0]]
+        }
+
+        let target_key = rule_key;
+        if (split_rule_key.length > 1) {
+            target_key = split_rule_key[1];
+        }
 
         const split_rule_msg = rule_data.split("|");
         if (split_rule_msg.length < 2) throw new Error("Invalid rule expect xx|xx");
@@ -31,22 +40,18 @@ const validate = async ({ rule, body, exclude_body = false }) => {
             throw new Error(`Invalid first rule ${first_rule_allow}`);
         }
 
-        if ((first_rule === "required" || first_rule === "objectid") && !body[rule_key] && typeof body[rule_key] !== "boolean") {
+        if ((first_rule === "required" || first_rule === "objectid") && !body_data && typeof body_data !== "boolean") {
             throw new Error(`400-${second_rule}`);
         }
 
-        if (first_rule === "objectid" && body[rule_key] && !body[rule_key].toString().match(/^[0-9a-fA-F]{24}$/)) {
+        if (first_rule === "objectid" && body_data && !body_data.toString().match(/^[0-9a-fA-F]{24}$/)) {
             throw new Error(`400-${second_rule}OBJ`);
         }
 
         if (third_rule[0] === "exist" && !third_rule[1]) throw new Error(`exist rule required model name`);
         if (third_rule[0] === "exist" || third_rule[0] === "notexist") {
-            let target_key = rule_key;
-            if (split_rule_key.length > 1) {
-                target_key = split_rule_key[1];
-            }
-            const exist = await _mongoose.model(third_rule[1]).findOne({ [`${target_key}`]: body[rule_key], deleted_at: null });
-            if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist))  throw new Error(`400-${second_rule}`);
+            const exist = await _mongoose.model(third_rule[1]).findOne({ [`${target_key}`]: body_data });
+            if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist)) throw new Error(`400-${second_rule}`);
         }
 
         if (third_rule[0] === "enum") {
@@ -55,8 +60,8 @@ const validate = async ({ rule, body, exclude_body = false }) => {
             }
 
             const valid_enum = third_rule[1].split(",");
-            if (!valid_enum.includes(body[rule_key])) {
-                throw new Error(`400-${second_rule}${rule_key.toUpperCase()}`);
+            if (!valid_enum.includes(body_data)) {
+                throw new Error(`400-${second_rule}`);
             }
         }
 
@@ -68,18 +73,18 @@ const validate = async ({ rule, body, exclude_body = false }) => {
             if (_third_rule === "object" && (typeof value !== "object" || Array.isArray(value))) throw new Error(`400-${second_rule + obj_field.toUpperCase()}`);
             if (_third_rule === "objectid" && !value.toString().match(/^[0-9a-fA-F]{24}$/)) throw new Error(`400-${second_rule + obj_field.toUpperCase()}`);
         }
-        _validator(third_rule[0], body[rule_key]);
+        _validator(third_rule[0], body_data);
 
         if (third_rule[0] === "object" && third_rule.length > 1) {
             const third_obj_rule = third_rule[1].split(",");
-            const object_key = Object.keys(body[rule_key]);
+            const object_key = Object.keys(body_data);
             if (first_rule === "required" && object_key.length < 1) throw new Error(`400-${second_rule}`);
             if (third_obj_rule.length > 0) {
                 for (let obj_i = 0; obj_i < third_obj_rule.length; obj_i++) {
                     const obj_str_rule = third_obj_rule[obj_i];
                     const split_obj_str_rule = obj_str_rule.split("/");
                     const obj_field = split_obj_str_rule[0];
-                    const obj_data = body[rule_key][obj_field];
+                    const obj_data = body_data[obj_field];
 
                     if (split_obj_str_rule.length > 1) {
                         const obj_rule = split_obj_str_rule[1].split("-");
@@ -99,7 +104,7 @@ const validate = async ({ rule, body, exclude_body = false }) => {
             }
         }
 
-        _body[rule_key] = body[rule_key];
+        _body[split_rule_key.length > 1 ? split_rule_key[0] : rule_key] = body_data;
     }
 
     if (!exclude_body) {
