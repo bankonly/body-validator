@@ -48,7 +48,7 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
             }
         }
 
-        if (first_rule !== "optional" || body_data || (first_rule !== "optional" && req.file)) {
+        if (first_rule !== "optional" || body_data || (first_rule !== "optional" && req.files)) {
 
 
             if (!first_rule_allow.includes(first_rule)) {
@@ -81,11 +81,11 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
             }
 
             if (third_rule[0] === "file") {
-                if (!req.file || !req.file[rule_key]) throw new Error(`400-${second_rule}`);
+                if (!req.files || !req.file[rule_key] || Array.isArray(req.files[rule_key])) throw new Error(`400-${second_rule}`);
             }
 
             if (third_rule[0] === "files") {
-                if (!req.files || !Array.isArray(req.files)) throw new Error(`400-${second_rule}`);
+                if (!req.files || !req.file[rule_key] || !Array.isArray(req.files[rule_key])) throw new Error(`400-${second_rule}`);
             }
 
             if (third_rule[0] === "enum") {
