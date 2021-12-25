@@ -1,7 +1,7 @@
 const _mongoose = require("mongoose");
 
 const first_rule_allow = ["required", "optional", "objectid"];
-const thrid_rule_allow = ["exist", "notexist", "enum", "array", "string", "number", "boolean", "object", "objectid", "file", "files"];
+const thrid_rule_allow = ["exist", "notexist", "enum", "array", "string", "number", "boolean", "object", "objectid", "file", "files", "params"];
 const TYPE_ALLOW = ["body", "query"]
 const validate = async ({ rule, req, exclude_body = true, type = "body", version = 2, check_deleted_data = true }) => {
     let _body = {};
@@ -43,6 +43,11 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                 third_rule[0] = split_third_rule[0]
                 key_update_check = split_third_rule[1]
             }
+
+            if(third_rule[0]==="params"){
+                body_data = req.params[rule_key]
+            }
+
             if (!thrid_rule_allow.includes(third_rule[0])) {
                 throw new Error(`Invalid thrid rule ${thrid_rule_allow}`);
             }
@@ -70,7 +75,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                 if (split_key_update_check.length > 1) key_body_update_check = split_key_update_check[0]
 
                 let conf = { [`${target_key}`]: body_data }
-                if(check_deleted_data){
+                if (check_deleted_data) {
                     if (version === 2) conf.deleted_at = null
                     else conf.is_active = true
                 }
