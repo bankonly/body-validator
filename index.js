@@ -3,15 +3,15 @@ const _mongoose = require("mongoose");
 const first_rule_allow = ["required", "optional", "objectid"];
 const thrid_rule_allow = ["exist", "notexist", "enum", "array", "string", "number", "boolean", "object", "objectid", "file", "files", "params"];
 const TYPE_ALLOW = ["body", "query"]
-const validate = async ({ rule, req, exclude_body = true, type = "body", version = 2, check_deleted_data = true,mongoose }) => {
+const validate = async ({ rule, req, exclude_body = true, type = "body", version = 2, check_deleted_data = true, mongoose }) => {
     let _body = {};
 
     if (!TYPE_ALLOW.includes(type)) throw new Error("invalid type rule")
-    let body = req[type]
     const rules_key = Object.keys(rule);
 
     if (rules_key.length === 0) throw new Error(`No rule given`);
     for (let i = 0; i < rules_key.length; i++) {
+        let body = req[type]
         let rule_key = rules_key[i];
         const rule_data = rule[rule_key];
         let body_data = body[rule_key]
@@ -35,6 +35,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
         let third_rule = "";
         let split_third_rule = "";
         let key_update_check = "";
+        let param_data = null;
 
         if (split_rule_msg.length === 3) {
             third_rule = split_rule_msg[2].split(":");
@@ -42,10 +43,16 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
             if (split_third_rule.length > 1) {
                 third_rule[0] = split_third_rule[0]
                 key_update_check = split_third_rule[1]
+
+                if (req.params[key_update_check]) {
+                    if (rule[key_update_check]) throw new Error("missing rule params")
+                    param_data = req.params[key_update_check]
+                }
             }
 
-            if(third_rule[0]==="params"){
+            if (third_rule[0] === "params") {
                 body_data = req.params[rule_key]
+                body = req.params
             }
 
             if (!thrid_rule_allow.includes(third_rule[0])) {
@@ -85,24 +92,27 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                 const split_key_update_check = key_update_check.split("@")
                 if (split_key_update_check.length > 1) key_body_update_check = split_key_update_check[0]
 
-                let conf = { [`${target_key}`]: body_data }
+                if (param_data) target_key = key_body_update_check
+                let conf = { [`${target_key}`]: param_data ? param_data : body_data }
                 if (check_deleted_data) {
                     if (version === 2) conf.deleted_at = null
                     else conf.is_active = true
                 }
 
                 let mongoose_instance = _mongoose
-                if(mongoose) mongoose_instance = mongoose
+                if (mongoose) mongoose_instance = mongoose
 
-
-                const exist = await mongoose_instance.model(third_rule[1]).findOne({ [`${target_key}`]: body_data });
-
-                if (key_update_check && third_rule[0] === "exist") {
+                let exist = await mongoose_instance.model(third_rule[1]).findOne(conf);
+                if (key_update_check && third_rule[0] === "exist" && !param_data) {
                     if (!rule[key_update_check]) throw new Error("rule missing")
                     if (body[key_body_update_check] === null || body[key_body_update_check] === undefined || body[key_body_update_check] === "") throw new Error(`400${version === 2 ? "-" : "::"}${rule[key_update_check].split("|")[1]}`)
                     if (exist && exist._id.toString() !== body[key_body_update_check]) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}EXISTED`);
                 } else {
-                    if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist) || (third_rule[0] === "params" && !exist)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
+                    if (param_data) {
+                        if (!exist) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
+                    } else {
+                        if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist) || (third_rule[0] === "params" && !exist)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
+                    }
                 }
             }
 
