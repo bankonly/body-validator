@@ -45,7 +45,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                 key_update_check = split_third_rule[1]
 
                 if (req.params[key_update_check]) {
-                    if (rule[key_update_check]) throw new Error("missing rule params")
+                    if (!rule[key_update_check]) throw new Error("missing rule params")
                     param_data = req.params[key_update_check]
                 }
             }
