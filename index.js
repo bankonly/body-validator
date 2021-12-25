@@ -3,7 +3,7 @@ const _mongoose = require("mongoose");
 const first_rule_allow = ["required", "optional", "objectid"];
 const thrid_rule_allow = ["exist", "notexist", "enum", "array", "string", "number", "boolean", "object", "objectid", "file", "files"];
 const TYPE_ALLOW = ["body", "query"]
-const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
+const validate = async ({ rule, req, exclude_body = false, type = "body", version = 2 }) => {
     let _body = {};
 
     if (!TYPE_ALLOW.includes(type)) throw new Error("invalid type rule")
@@ -56,11 +56,11 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
             }
 
             if ((first_rule === "required" || first_rule === "objectid") && !body_data && typeof body_data !== "boolean") {
-                throw new Error(`400-${second_rule}`);
+                throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
             }
 
             if (first_rule === "objectid" && body_data && !body_data.toString().match(/^[0-9a-fA-F]{24}$/)) {
-                throw new Error(`400-${second_rule}OBJ`);
+                throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}OBJ`);
             }
 
             if (third_rule[0] === "exist" && !third_rule[1]) throw new Error(`exist rule required model name`);
@@ -73,19 +73,19 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
 
                 if (key_update_check && third_rule[0] === "exist") {
                     if (!rule[key_update_check]) throw new Error("rule missing")
-                    if (body[key_body_update_check] === null || body[key_body_update_check] === undefined || body[key_body_update_check] === "") throw new Error(`400-${rule[key_update_check].split("|")[1]}`)
-                    if (exist && exist._id.toString() !== body[key_body_update_check]) throw new Error(`400-${second_rule}EXISTED`);
+                    if (body[key_body_update_check] === null || body[key_body_update_check] === undefined || body[key_body_update_check] === "") throw new Error(`400${version === 2 ? "-" : "::"}${rule[key_update_check].split("|")[1]}`)
+                    if (exist && exist._id.toString() !== body[key_body_update_check]) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}EXISTED`);
                 } else {
-                    if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist)) throw new Error(`400-${second_rule}`);
+                    if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
                 }
             }
 
             if (third_rule[0] === "file") {
-                if (!req.files || !req.files[rule_key] || Array.isArray(req.files[rule_key])) throw new Error(`400-${second_rule}`);
+                if (!req.files || !req.files[rule_key] || Array.isArray(req.files[rule_key])) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
             }
 
             if (third_rule[0] === "files") {
-                if (!req.files || !req.files[rule_key] || !Array.isArray(req.files[rule_key])) throw new Error(`400-${second_rule}`);
+                if (!req.files || !req.files[rule_key] || !Array.isArray(req.files[rule_key])) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
             }
 
             if (third_rule[0] === "enum") {
@@ -95,24 +95,24 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
 
                 const valid_enum = third_rule[1].split(",");
                 if (!valid_enum.includes(body_data)) {
-                    throw new Error(`400-${second_rule}`);
+                    throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
                 }
             }
 
             function _validator(_third_rule, value, obj_field = "") {
-                if (_third_rule === "array" && !Array.isArray(value)) throw new Error(`400-${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "string" && typeof value !== "string") throw new Error(`400-${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "number" && typeof value !== "number") throw new Error(`400-${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "boolean" && typeof value !== "boolean") throw new Error(`400-${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "object" && (typeof value !== "object" || Array.isArray(value))) throw new Error(`400-${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "objectid" && !value.toString().match(/^[0-9a-fA-F]{24}$/)) throw new Error(`400-${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "array" && !Array.isArray(value)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "string" && typeof value !== "string") throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "number" && typeof value !== "number") throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "boolean" && typeof value !== "boolean") throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "object" && (typeof value !== "object" || Array.isArray(value))) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "objectid" && !value.toString().match(/^[0-9a-fA-F]{24}$/)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
             }
             _validator(third_rule[0], body_data);
 
             if (third_rule[0] === "object" && third_rule.length > 1) {
                 const third_obj_rule = third_rule[1].split(",");
                 const object_key = Object.keys(body_data);
-                if (first_rule === "required" && object_key.length < 1) throw new Error(`400-${second_rule}`);
+                if (first_rule === "required" && object_key.length < 1) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
                 if (third_obj_rule.length > 0) {
                     for (let obj_i = 0; obj_i < third_obj_rule.length; obj_i++) {
                         const obj_str_rule = third_obj_rule[obj_i];
@@ -126,7 +126,7 @@ const validate = async ({ rule, req, exclude_body = false, type = "body" }) => {
                                 if (!first_rule_allow.includes(obj_rule[0])) {
                                     throw new Error(`Invalid object rule ${first_rule_allow}`);
                                 }
-                                if (obj_rule[0] === "required" && !obj_data && typeof obj_data !== "boolean") throw new Error(`400-${second_rule + obj_field.toUpperCase()}`);
+                                if (obj_rule[0] === "required" && !obj_data && typeof obj_data !== "boolean") throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
                                 if ((obj_rule[0] === "optional" && obj_data !== "" && obj_data !== null && obj_data !== undefined) || obj_rule[0] === "required" || obj_data) {
                                     _validator(obj_rule[1], obj_data, obj_field);
                                 }
