@@ -79,7 +79,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
             }
 
             if (third_rule[0] === "exist" && !third_rule[1]) throw new Error(`exist rule required model name`);
-            if (third_rule[0] === "exist" || third_rule[0] === "notexist") {
+            if (third_rule[0] === "exist" || third_rule[0] === "notexist" || third_rule[0] === "params") {
 
                 let key_body_update_check = key_update_check
                 const split_key_update_check = key_update_check.split("@")
@@ -94,6 +94,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                 let mongoose_instance = _mongoose
                 if(mongoose) mongoose_instance = mongoose
 
+
                 const exist = await mongoose_instance.model(third_rule[1]).findOne({ [`${target_key}`]: body_data });
 
                 if (key_update_check && third_rule[0] === "exist") {
@@ -101,7 +102,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                     if (body[key_body_update_check] === null || body[key_body_update_check] === undefined || body[key_body_update_check] === "") throw new Error(`400${version === 2 ? "-" : "::"}${rule[key_update_check].split("|")[1]}`)
                     if (exist && exist._id.toString() !== body[key_body_update_check]) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}EXISTED`);
                 } else {
-                    if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
+                    if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist) || (third_rule[0] === "params" && !exist)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
                 }
             }
 
