@@ -3,7 +3,7 @@ const _mongoose = require("mongoose");
 const first_rule_allow = ["required", "optional", "objectid"];
 const thrid_rule_allow = ["exist", "notexist", "enum", "array", "string", "number", "boolean", "object", "objectid", "file", "files", "params"];
 const TYPE_ALLOW = ["body", "query"]
-const validate = async ({ rule, req, exclude_body = true, type = "body", version = 2, check_deleted_data = true }) => {
+const validate = async ({ rule, req, exclude_body = true, type = "body", version = 2, check_deleted_data = true,mongoose }) => {
     let _body = {};
 
     if (!TYPE_ALLOW.includes(type)) throw new Error("invalid type rule")
@@ -70,6 +70,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
 
             if (third_rule[0] === "exist" && !third_rule[1]) throw new Error(`exist rule required model name`);
             if (third_rule[0] === "exist" || third_rule[0] === "notexist") {
+
                 let key_body_update_check = key_update_check
                 const split_key_update_check = key_update_check.split("@")
                 if (split_key_update_check.length > 1) key_body_update_check = split_key_update_check[0]
@@ -80,7 +81,10 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                     else conf.is_active = true
                 }
 
-                const exist = await _mongoose.model(third_rule[1]).findOne({ [`${target_key}`]: body_data });
+                let mongoose_instance = _mongoose
+                if(mongoose) mongoose_instance = mongoose
+
+                const exist = await mongoose_instance.model(third_rule[1]).findOne({ [`${target_key}`]: body_data });
 
                 if (key_update_check && third_rule[0] === "exist") {
                     if (!rule[key_update_check]) throw new Error("rule missing")
