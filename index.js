@@ -55,6 +55,16 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
 
         if (first_rule !== "optional" || body_data || (first_rule !== "optional" && req.files)) {
 
+            if (third_rule[0] === "file") {
+                if (!req.files || !req.files[rule_key] || Array.isArray(req.files[rule_key])) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
+                body_data = req.files[rule_key]
+            }
+
+            if (third_rule[0] === "files") {
+                if (!req.files || !req.files[rule_key] || !Array.isArray(req.files[rule_key])) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
+                body_data = req.files[rule_key]
+            }
+
 
             if (!first_rule_allow.includes(first_rule)) {
                 throw new Error(`Invalid first rule ${first_rule_allow}`);
@@ -95,13 +105,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                 }
             }
 
-            if (third_rule[0] === "file") {
-                if (!req.files || !req.files[rule_key] || Array.isArray(req.files[rule_key])) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
-            }
 
-            if (third_rule[0] === "files") {
-                if (!req.files || !req.files[rule_key] || !Array.isArray(req.files[rule_key])) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
-            }
 
             if (third_rule[0] === "enum") {
                 if (!third_rule[1]) {
