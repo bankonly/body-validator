@@ -106,8 +106,8 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                     if (!rule[key_update_check]) throw new Error("rule missing")
                     let body_check_data = body[key_body_update_check]
                     if (param_data) {
-                        const exist_update = await mongoose_instance.model(third_rule[1]).findOne({ [`${key_update_check}`]: param_data });
-                        if (!exist_update) throw new Error(`400${version === 2 ? "-" : "::"}${key_update_check.toUpperCase() + second_rule}`);
+                        const exist_update = await mongoose_instance.model(third_rule[1]).findOne({ [`${key_body_update_check}`]: param_data });
+                        if (!exist_update) throw new Error(`400${version === 2 ? "-" : "::"}${key_body_update_check.toUpperCase() + second_rule}`);
                         body_check_data = param_data
                     }
 
