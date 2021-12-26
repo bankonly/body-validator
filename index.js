@@ -92,8 +92,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                 const split_key_update_check = key_update_check.split("@")
                 if (split_key_update_check.length > 1) key_body_update_check = split_key_update_check[0]
 
-                if (param_data) target_key = key_body_update_check
-                let conf = { [`${target_key}`]: param_data ? param_data : body_data }
+                let conf = { [`${target_key}`]: body_data }
                 if (check_deleted_data) {
                     if (version === 2) conf.deleted_at = null
                     else conf.is_active = true
@@ -103,16 +102,19 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                 if (mongoose) mongoose_instance = mongoose
 
                 let exist = await mongoose_instance.model(third_rule[1]).findOne(conf);
-                if (key_update_check && third_rule[0] === "exist" && !param_data) {
+                if (key_update_check && third_rule[0] === "exist") {
                     if (!rule[key_update_check]) throw new Error("rule missing")
-                    if (body[key_body_update_check] === null || body[key_body_update_check] === undefined || body[key_body_update_check] === "") throw new Error(`400${version === 2 ? "-" : "::"}${rule[key_update_check].split("|")[1]}`)
-                    if (exist && exist._id.toString() !== body[key_body_update_check]) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}EXISTED`);
-                } else {
+                    let body_check_data = body[key_body_update_check]
                     if (param_data) {
-                        if (!exist) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
-                    } else {
-                        if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist) || (third_rule[0] === "params" && !exist)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
+                        const exist_update = await mongoose_instance.model(third_rule[1]).findOne({ [`${key_update_check}`]: param_data });
+                        if (!exist_update) throw new Error(`400${version === 2 ? "-" : "::"}${key_update_check.toUpperCase() + second_rule}`);
+                        body_check_data = param_data
                     }
+
+                    if (body_check_data === null || body_check_data === undefined || body_check_data === "") throw new Error(`400${version === 2 ? "-" : "::"}${rule[key_update_check].split("|")[1]}`)
+                    if (exist && ((exist._id.toString() !== body_check_data) || (exist._id.toString() !== param_data))) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}EXISTED`);
+                } else {
+                    if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist) || (third_rule[0] === "params" && !exist)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
                 }
             }
 
@@ -170,7 +172,9 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
         }
 
 
+        // if(key_update_check !== "_id"){
         _body[split_rule_key.length > 1 ? split_rule_key[0] : rule_key] = body_data;
+        // }
     }
 
     if (!exclude_body) {
