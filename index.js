@@ -89,8 +89,12 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
             if (third_rule[0] === "exist" || third_rule[0] === "notexist" || third_rule[0] === "params") {
 
                 let key_body_update_check = key_update_check
+                let param_check = key_update_check
                 const split_key_update_check = key_update_check.split("@")
-                if (split_key_update_check.length > 1) key_body_update_check = split_key_update_check[0]
+                if (split_key_update_check.length > 1) {
+                    key_body_update_check = split_key_update_check[0]
+                    param_check = split_key_update_check[1]
+                }
 
                 let conf = { [`${target_key}`]: body_data }
                 if (check_deleted_data) {
@@ -106,7 +110,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                     if (!rule[key_update_check]) throw new Error("rule missing")
                     let body_check_data = body[key_body_update_check]
                     if (param_data) {
-                        const exist_update = await mongoose_instance.model(third_rule[1]).findOne({ [`${key_body_update_check}`]: param_data });
+                        const exist_update = await mongoose_instance.model(third_rule[1]).findOne({ [`${param_check}`]: param_data });
                         if (!exist_update) throw new Error(`400${version === 2 ? "-" : "::"}${key_body_update_check.toUpperCase() + second_rule}`);
                         body_check_data = param_data
                     }
