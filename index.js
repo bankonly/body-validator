@@ -52,6 +52,9 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
 
             if (third_rule[0] === "params") {
                 body_data = req.params[rule_key]
+                if (split_rule_key.length > 0) {
+                    body_data = req.params[split_rule_key[0]]
+                }
                 body = req.params
             }
 
