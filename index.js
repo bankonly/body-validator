@@ -141,7 +141,7 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
             function _validator(_third_rule, value, obj_field = "") {
                 if (_third_rule === "array" && !Array.isArray(value)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
                 if (_third_rule === "string" && typeof value !== "string") throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "number" && typeof value !== "number") throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "number" && typeof value !== "number" && !parseInt(value)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
                 if (_third_rule === "boolean" && typeof value !== "boolean") throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
                 if (_third_rule === "object" && (typeof value !== "object" || Array.isArray(value))) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
                 if (_third_rule === "objectid" && !value.toString().match(/^[0-9a-fA-F]{24}$/)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
