@@ -2,23 +2,38 @@ const _mongoose = require("mongoose");
 
 const first_rule_allow = ["required", "optional", "objectid"];
 const thrid_rule_allow = ["exist", "notexist", "enum", "array", "string", "number", "boolean", "object", "objectid", "file", "files", "params"];
-const TYPE_ALLOW = ["body", "query"]
-const validate = async ({ rule, req, exclude_body = true, type = "body", version = 2, check_deleted_data = true, mongoose }) => {
+const TYPE_ALLOW = ["body", "query"];
+
+const validateFunc = async ({
+    rule,
+    req,
+    exclude_body = true,
+    type = "body",
+    version = 2,
+    check_deleted_data = true,
+    mongoose,
+    is_array = false,
+    index = 0,
+}) => {
     let _body = {};
 
-    if (!TYPE_ALLOW.includes(type)) throw new Error("invalid type rule")
+    if (!TYPE_ALLOW.includes(type)) throw new Error("invalid type rule");
     const rules_key = Object.keys(rule);
+
+    let body = req[type];
+    if (is_array === true) {
+        body = req[type][index];
+    }
 
     if (rules_key.length === 0) throw new Error(`No rule given`);
     for (let i = 0; i < rules_key.length; i++) {
-        let body = req[type]
         let rule_key = rules_key[i];
         const rule_data = rule[rule_key];
-        let body_data = body[rule_key]
+        let body_data = body[rule_key];
         const split_rule_key = rule_key.split("@");
 
         if (split_rule_key.length > 0) {
-            body_data = body[split_rule_key[0]]
+            body_data = body[split_rule_key[0]];
         }
 
         let target_key = rule_key;
@@ -39,23 +54,23 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
 
         if (split_rule_msg.length === 3) {
             third_rule = split_rule_msg[2].split(":");
-            split_third_rule = third_rule[0].split(".")
+            split_third_rule = third_rule[0].split(".");
             if (split_third_rule.length > 1) {
-                third_rule[0] = split_third_rule[0]
-                key_update_check = split_third_rule[1]
+                third_rule[0] = split_third_rule[0];
+                key_update_check = split_third_rule[1];
 
                 if (req.params[key_update_check]) {
-                    if (!rule[key_update_check]) throw new Error("missing rule params")
-                    param_data = req.params[key_update_check]
+                    if (!rule[key_update_check]) throw new Error("missing rule params");
+                    param_data = req.params[key_update_check];
                 }
             }
 
             if (third_rule[0] === "params") {
-                body_data = req.params[rule_key]
+                body_data = req.params[rule_key];
                 if (split_rule_key.length > 0) {
-                    body_data = req.params[split_rule_key[0]]
+                    body_data = req.params[split_rule_key[0]];
                 }
-                body = req.params
+                body = req.params;
             }
 
             if (!thrid_rule_allow.includes(third_rule[0])) {
@@ -64,17 +79,17 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
         }
 
         if (first_rule !== "optional" || body_data || (first_rule !== "optional" && req.files)) {
-
             if (third_rule[0] === "file") {
-                if (!req.files || !req.files[rule_key] || Array.isArray(req.files[rule_key])) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
-                body_data = req.files[rule_key]
+                if (!req.files || !req.files[rule_key] || Array.isArray(req.files[rule_key]))
+                    throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
+                body_data = req.files[rule_key];
             }
 
             if (third_rule[0] === "files") {
-                if (!req.files || !req.files[rule_key] || !Array.isArray(req.files[rule_key])) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
-                body_data = req.files[rule_key]
+                if (!req.files || !req.files[rule_key] || !Array.isArray(req.files[rule_key]))
+                    throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
+                body_data = req.files[rule_key];
             }
-
 
             if (!first_rule_allow.includes(first_rule)) {
                 throw new Error(`Invalid first rule ${first_rule_allow}`);
@@ -90,42 +105,42 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
 
             if (third_rule[0] === "exist" && !third_rule[1]) throw new Error(`exist rule required model name`);
             if (third_rule[0] === "exist" || third_rule[0] === "notexist" || third_rule[0] === "params") {
-
-                let key_body_update_check = key_update_check
-                let param_check = key_update_check
-                const split_key_update_check = key_update_check.split("@")
+                let key_body_update_check = key_update_check;
+                let param_check = key_update_check;
+                const split_key_update_check = key_update_check.split("@");
                 if (split_key_update_check.length > 1) {
-                    key_body_update_check = split_key_update_check[0]
-                    param_check = split_key_update_check[1]
+                    key_body_update_check = split_key_update_check[0];
+                    param_check = split_key_update_check[1];
                 }
 
-                let conf = { [`${target_key}`]: body_data }
+                let conf = { [`${target_key}`]: body_data };
                 if (check_deleted_data) {
-                    if (version === 2) conf.deleted_at = null
-                    else conf.is_active = true
+                    if (version === 2) conf.deleted_at = null;
+                    else conf.is_active = true;
                 }
 
-                let mongoose_instance = _mongoose
-                if (mongoose) mongoose_instance = mongoose
+                let mongoose_instance = _mongoose;
+                if (mongoose) mongoose_instance = mongoose;
 
                 let exist = await mongoose_instance.model(third_rule[1]).findOne(conf);
                 if (key_update_check && third_rule[0] === "exist") {
-                    if (!rule[key_update_check]) throw new Error("rule missing")
-                    let body_check_data = body[key_body_update_check]
+                    if (!rule[key_update_check]) throw new Error("rule missing");
+                    let body_check_data = body[key_body_update_check];
                     if (param_data) {
                         const exist_update = await mongoose_instance.model(third_rule[1]).findOne({ [`${param_check}`]: param_data });
                         if (!exist_update) throw new Error(`400${version === 2 ? "-" : "::"}${param_check.toUpperCase() + second_rule}`);
-                        body_check_data = param_data
+                        body_check_data = param_data;
                     }
 
-                    if (body_check_data === null || body_check_data === undefined || body_check_data === "") throw new Error(`400${version === 2 ? "-" : "::"}${rule[key_update_check].split("|")[1]}`)
-                    if (exist && ((exist._id.toString() !== body_check_data) || (exist._id.toString() !== param_data))) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}EXISTED`);
+                    if (body_check_data === null || body_check_data === undefined || body_check_data === "")
+                        throw new Error(`400${version === 2 ? "-" : "::"}${rule[key_update_check].split("|")[1]}`);
+                    if (exist && (exist._id.toString() !== body_check_data || exist._id.toString() !== param_data))
+                        throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}EXISTED`);
                 } else {
-                    if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist) || (third_rule[0] === "params" && !exist)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
+                    if ((third_rule[0] === "exist" && exist) || (third_rule[0] === "notexist" && !exist) || (third_rule[0] === "params" && !exist))
+                        throw new Error(`400${version === 2 ? "-" : "::"}${second_rule}`);
                 }
             }
-
-
 
             if (third_rule[0] === "enum") {
                 if (!third_rule[1]) {
@@ -139,12 +154,18 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
             }
 
             function _validator(_third_rule, value, obj_field = "") {
-                if (_third_rule === "array" && !Array.isArray(value)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "string" && typeof value !== "string") throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "number" && typeof value !== "number" && !parseInt(value)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "boolean" && typeof value !== "boolean") throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "object" && (typeof value !== "object" || Array.isArray(value))) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
-                if (_third_rule === "objectid" && !value.toString().match(/^[0-9a-fA-F]{24}$/)) throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "array" && !Array.isArray(value))
+                    throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "string" && typeof value !== "string")
+                    throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "number" && typeof value !== "number" && !parseInt(value))
+                    throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "boolean" && typeof value !== "boolean")
+                    throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "object" && (typeof value !== "object" || Array.isArray(value)))
+                    throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                if (_third_rule === "objectid" && !value.toString().match(/^[0-9a-fA-F]{24}$/))
+                    throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
             }
             _validator(third_rule[0], body_data);
 
@@ -165,8 +186,13 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
                                 if (!first_rule_allow.includes(obj_rule[0])) {
                                     throw new Error(`Invalid object rule ${first_rule_allow}`);
                                 }
-                                if (obj_rule[0] === "required" && !obj_data && typeof obj_data !== "boolean") throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
-                                if ((obj_rule[0] === "optional" && obj_data !== "" && obj_data !== null && obj_data !== undefined) || obj_rule[0] === "required" || obj_data) {
+                                if (obj_rule[0] === "required" && !obj_data && typeof obj_data !== "boolean")
+                                    throw new Error(`400${version === 2 ? "-" : "::"}${second_rule + obj_field.toUpperCase()}`);
+                                if (
+                                    (obj_rule[0] === "optional" && obj_data !== "" && obj_data !== null && obj_data !== undefined) ||
+                                    obj_rule[0] === "required" ||
+                                    obj_data
+                                ) {
                                     _validator(obj_rule[1], obj_data, obj_field);
                                 }
                             } else {
@@ -178,7 +204,6 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
             }
         }
 
-
         // if(key_update_check !== "_id"){
         _body[split_rule_key.length > 1 ? split_rule_key[0] : rule_key] = body_data;
         // }
@@ -188,6 +213,18 @@ const validate = async ({ rule, req, exclude_body = true, type = "body", version
         return body;
     }
     return _body;
+};
+
+const validate = async ({ rule, req, exclude_body = true, type = "body", version = 2, check_deleted_data = true, mongoose, is_array = false }) => {
+    if (is_array) {
+        let result = [];
+        for (let index = 0; index < req.body.length; index++) {
+            const validate_response = await validateFunc({ rule, req, exclude_body, type, version, check_deleted_data, mongoose, is_array });
+            result.push(validate_response);
+        }
+        return result;
+    }
+    return await validateFunc({ rule, req, exclude_body, type, version, check_deleted_data, mongoose });
 };
 
 module.exports = validate;
